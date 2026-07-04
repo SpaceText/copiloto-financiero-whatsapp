@@ -39,7 +39,12 @@ async def recibir_mensaje_whatsapp(request: Request):
     (mensajes de texto, imágenes, estados de lectura, etc.).
     """
     body = await request.json()
-    
+    @app.post("/webhook")
+async def recibir_mensaje_whatsapp(request: Request):
+    body = await request.json()
+    print("¡ALERTA! Llegó un mensaje de Meta:", body) # <--- ¡ESTA ES LA LÍNEA MÁGICA!
+
+    # ... (el resto de tu código)
     # Imprimimos el JSON entrante en la consola para depuración
     print("=== NUEVO EVENTO RECIBIDO DESDE META ===")
     print(body)
