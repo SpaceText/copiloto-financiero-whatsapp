@@ -8,7 +8,7 @@ load_dotenv()
 app = FastAPI(title="Copiloto Financiero WhatsApp MVP")
 
 WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "mi_token_secreto_123")
-META_ACCESS_TOKEN = "EAAOl65mcRj0BR49fBvqYmYCxrnVwgioQ6iQMvxi3aTSsTaV1IV9VALw9ZB101d8gOR0ZAHu5Is6EGlnGcyklpb7IZBOYFwHj9c6Muz1y460kSY1TG3aKFIKUwyPvwxZCfKeUALi5vpcZBIhlFqlFDJS0kQ5WzZCSWB27dZBVzZCMUFAXY0yvKt3MjWwdcbgV5xq8ZBsHWoQfptgm5gfoZCZBeMtkZAXADXjGyFaMiNHkRm4OXP6RS7kD91Sp4OFpVQaiu1TSfjXEQ2V9kvtmdtavm3bX"
+META_ACCESS_TOKEN = "EAAOl65mcRj0BR89TM2UJBkA0RqpW3IZBoxvl4ItRkWZAA433jS7FnKs11cbgMMGN89K63zMJn474F7fEjSqWCD3LO2EaPVdHTfkp65B99Bn5MybC9FgCKaZCQRp4PUHSxqaspMZA9D512nug7u4BqMJoctlZC1rGI1IGGC6acbO8T83PpTDZAw9pzzgydPcs5FvMuY05RvYvbXoFNNPvmmJel23kBTf8oqVAFK2uGV8zZBWPeYB299FV6l7iXYO12J1ylylEXcQqbZC5YQydGcJa"
 PHONE_NUMBER_ID = "1097267976812653"
 
 @app.get("/webhook")
@@ -27,28 +27,36 @@ async def verificar_webhook(request: Request):
 async def recibir_mensaje_whatsapp(request: Request):
     body = await request.json()
     
-    print("\n🚀 🔥 ¡ALERTA! ACABA DE ENTRAR UN MENSAJE DESDE WHATSAPP! 🔥 🚀")
-    print("DATOS RECIBIDOS EN CRUDO:", body)
+    # Imprimimos TODO para ver qué llega exactamente
+    print("\n🚀 🔥 ¡NUEVO EVENTO DESDE WHATSAPP! 🔥 🚀")
+    print(body)
     print("========================================================\n")
     
     try:
-        if body.get("entry") and body["entry"][0].get("changes"):
-            change = body["entry"][0]["changes"][0]["value"]
-            if "messages" not in change:
-                return {"status": "success", "reason": "No es un mensaje (puede ser estado de entrega)"}
+        # Navegamos por el JSON con cuidado
+        if "entry" in body and body["entry"]:
+            entry = body["entry"][0]
+            if "changes" in entry and entry["changes"]:
+                change = entry["changes"][0]["value"]
                 
-            message_data = change["messages"][0]
-            remitente_telefono = message_data["from"]
-            tipo_mensaje = message_data["type"]
+                # Verificamos si hay mensajes
+                if "messages" in change and change["messages"]:
+                    message_data = change["messages"][0]
+                    remitente_telefono = message_data.get("from")
+                    tipo_mensaje = message_data.get("type")
 
-            if tipo_mensaje == "text":
-                texto_usuario = message_data["text"]["body"]
-                print(f"💬 Texto del usuario extraído con éxito: '{texto_usuario}'")
-                
-                mensaje_respuesta = f"🤖 ¡Hola! Soy tu Copiloto Financiero. Tu mensaje llegó perfecto a mi servidor. Escribiste: '{texto_usuario}'"
-                await enviar_mensaje_whatsapp(remitente_telefono, mensaje_respuesta)
+                    if tipo_mensaje == "text":
+                        texto_usuario = message_data["text"]["body"]
+                        print(f"💬 Texto extraído: '{texto_usuario}' de {remitente_telefono}")
+                        
+                        mensaje_respuesta = f"🤖 ¡Hola! Soy tu Copiloto Financiero. Recibí tu mensaje: '{texto_usuario}'"
+                        await enviar_mensaje_whatsapp(remitente_telefono, mensaje_respuesta)
+                    else:
+                        print(f"⚠️ Recibido mensaje de tipo: {tipo_mensaje}. Aún no lo proceso.")
+                else:
+                    print("ℹ️ El evento no contiene mensajes (probablemente es un status).")
     except Exception as e:
-        print("❌ Error procesando el mensaje:", str(e))
+        print(f"❌ Error procesando el mensaje: {e}")
 
     return {"status": "success"}
 
@@ -66,4 +74,4 @@ async def enviar_mensaje_whatsapp(telefono_destino: str, texto: str):
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(url, json=payload, headers=headers)
-        print("✉️ Respuesta de Meta al intentar responder:", response.json())
+        print("✉️ Respuesta de Meta al responder:", response.json())
