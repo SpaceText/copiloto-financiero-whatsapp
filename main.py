@@ -8,9 +8,7 @@ load_dotenv()
 app = FastAPI(title="Copiloto Financiero WhatsApp MVP")
 
 WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "mi_token_secreto_123")
-
-# 🚨 AQUÍ PEGAREMOS LAS LLAVES NUEVAS EN EL PASO 3
-META_ACCESS_TOKEN = "TU_TOKEN_TEMPORAL_AQUÍ"
+META_ACCESS_TOKEN = "EAAOl65mcRj0BR89TM2UJBkA0RqpW3IZBoxvl4ItRkWZAA433jS7FnKs11cbgMMGN89K63zMJn474F7fEjSqWCD3LO2EaPVdHTfkp65B99Bn5MybC9FgCKaZCQRp4PUHSxqaspMZA9D512nug7u4BqMJoctlZC1rGI1IGGC6acbO8T83PpTDZAw9pzzgydPcs5FvMuY05RvYvbXoFNNPvmmJel23kBTf8oqVAFK2uGV8zZBWPeYB299FV6l7iXYO12J1ylylEXcQqbZC5YQydGcJa"
 PHONE_NUMBER_ID = "1097267976812653"
 
 @app.get("/webhook")
@@ -29,7 +27,6 @@ async def verificar_webhook(request: Request):
 async def recibir_mensaje_whatsapp(request: Request):
     body = await request.json()
     
-    # 📢 ESTE ES EL GRAN GRITO EN LA CONSOLA
     print("\n🚀 🔥 ¡ALERTA! ACABA DE ENTRAR UN MENSAJE DESDE WHATSAPP! 🔥 🚀")
     print("DATOS RECIBIDOS EN CRUDO:", body)
     print("========================================================\n")
@@ -38,7 +35,7 @@ async def recibir_mensaje_whatsapp(request: Request):
         if body.get("entry") and body["entry"][0].get("changes"):
             change = body["entry"][0]["changes"][0]["value"]
             if "messages" not in change:
-                return {"status": "success", "reason": "No es un mensaje (puede ser un estado de entrega)"}
+                return {"status": "success", "reason": "No es un mensaje (puede ser estado de entrega)"}
                 
             message_data = change["messages"][0]
             remitente_telefono = message_data["from"]
@@ -48,8 +45,7 @@ async def recibir_mensaje_whatsapp(request: Request):
                 texto_usuario = message_data["text"]["body"]
                 print(f"💬 Texto del usuario extraído con éxito: '{texto_usuario}'")
                 
-                # Intentar responderle automáticamente al usuario
-                mensaje_respuesta = f"🤖 ¡Hola! Soy tu Copiloto Financiero. Tu mensaje de texto llegó perfecto a mi servidor. Escribiste: '{texto_usuario}'"
+                mensaje_respuesta = f"🤖 ¡Hola! Soy tu Copiloto Financiero. Tu mensaje llegó perfecto a mi servidor. Escribiste: '{texto_usuario}'"
                 await enviar_mensaje_whatsapp(remitente_telefono, mensaje_respuesta)
     except Exception as e:
         print("❌ Error procesando el mensaje:", str(e))
